@@ -57,8 +57,8 @@ Whole-body-GAN-generator/
 
 | Component | Role |
 |---|---|
-| **StyleGAN-Human** (StyleGAN2, 1024×1024) | Full-body image generator — produces photorealistic human images |
-| **StyleGAN2-FFHQ** (1024×1024) | Face generator — provides the source face latent code |
+| **StyleGAN-Human** (StyleGAN2, 1024×1024) | Full-body image generator, produces photorealistic human images |
+| **StyleGAN2-FFHQ** (1024×1024) | Face generator, provides the source face latent code |
 | **ReStyle** (pSp encoder) | Encodes a real user photo into the FFHQ GAN latent space |
 | **InsetGAN** | Joint optimiser that composites the face GAN output into the body GAN seamlessly |
 | **PTI** (Pivotal Tuning Inversion) | Fine-tunes the generator on a specific user photo for higher fidelity |
@@ -71,9 +71,9 @@ Whole-body-GAN-generator/
 
 Beyond user-photo generation, the StyleGAN-Human model supports:
 
-- **Attribute editing** — change clothing length (upper / bottom) via latent space directions
-- **Style mixing** — blend body styles from different generated identities
-- **Unconditional generation** — generate random full-body human images from seeds
+- **Attribute editing**: change clothing length (upper / bottom) via latent space directions
+- **Style mixing**: blend body styles from different generated identities
+- **Unconditional generation**: generate random full-body human images from seeds
 
 ---
 
@@ -98,11 +98,11 @@ End-to-end pipeline with a FastAPI server:
 
 ### `server/Deploying_Style_Human_Inference_in_Google_Colab_environment.ipynb`
 Deployment-focused notebook. Exposes these API endpoints:
-- `GET /` — health check
-- `POST /generate` — generate images from seeds
-- `POST /edit` — attribute editing
-- `POST /style_mix` — style mixing
-- `POST /insetgan` — InsetGAN joint optimisation
+- `GET /`: health check
+- `POST /generate`: generate images from seeds
+- `POST /edit`: attribute editing
+- `POST /style_mix`: style mixing
+- `POST /insetgan`: InsetGAN joint optimisation
 
 ---
 
@@ -141,24 +141,22 @@ The app uses **Firebase Storage** to upload the user photo and retrieve the gene
 
 ## Python Requirements
 
+The notebooks were run in Google Colab and install dependencies inline. Core packages:
+
 ```bash
 pip install torch torchvision lpips fastapi colabcode
 ```
 
-Full list in `requirements/`.
+No pinned `requirements.txt` is included; the `requirements/` directory contains
+only the Firebase configuration file (`GoogleService-Info.plist`) used by the iOS app.
 
 ---
 
 ## References
 
-- [StyleGAN-Human](https://github.com/stylegan-human/StyleGAN-Human) — Fu et al. (2022)
-- [ReStyle](https://github.com/yuval-alaluf/restyle-encoder) — Alaluf et al. (2021)
-- [InsetGAN](https://github.com/stylegan-human/StyleGAN-Human) — joint face-body optimisation
-- [PTI](https://github.com/danielroich/PTI) — Roich et al. (2022)
+- [StyleGAN-Human](https://github.com/stylegan-human/StyleGAN-Human) (Fu et al., 2022)
+- [ReStyle](https://github.com/yuval-alaluf/restyle-encoder) (Alaluf et al., 2021)
+- [InsetGAN](https://github.com/stylegan-human/StyleGAN-Human): joint face-body optimisation
+- [PTI](https://github.com/danielroich/PTI) (Roich et al., 2022)
 - [Fellowship.AI](https://fellowship.ai)
 
----
-
-## License
-
-MIT
