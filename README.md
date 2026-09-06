@@ -16,7 +16,7 @@ User photo (iOS app)
        │
        ▼
   InsetGAN joint optimiser ← composites the face GAN (FFHQ) into the body GAN (StyleGAN-Human)
-       │                      running iterative optimisation to make them seamless
+       │                      by iterative optimisation that matches appearance across the join
        ▼
   Generated full-body image
        │
@@ -45,11 +45,15 @@ Whole-body-GAN-generator/
 │   ├── UI/                  # Swift iOS UI source
 │   └── Whole-Body GAN Demo/ # Xcode workspace (Firebase + CocoaPods)
 ├── User Whole Body Generation/
-│   ├── StyleGAN-Human/      # Pretrained model directory
-│   ├── restyle/             # ReStyle encoder directory
+│   ├── StyleGAN-Human/      # Vendored StyleGAN-Human source (code only; pretrained weights are downloaded at runtime)
+│   ├── restyle/             # Vendored ReStyle encoder source (includes its own LICENSE and per-dependency licenses/)
 │   └── *.jpg                # Sample input images
-└── requirements/            # Python dependencies
+├── data_cleaning/           # Background blurring/replacement notebooks used to prep sample images
+├── docs/                    # Longer-form technical documentation (InsetGAN write-up, reading guide)
+└── requirements/            # Firebase config for the iOS app (GoogleService-Info.plist)
 ```
+
+`StyleGAN-Human/` and `restyle/` are third-party repositories included in full, not thin wrappers; the code authored for this project is the FastAPI server notebooks, the iOS client, and the glue that connects them. Only the vendored `restyle/` copy ships its own `LICENSE` file (plus a `licenses/` directory covering its own dependencies); the vendored `StyleGAN-Human/` copy in this repo does not include a `LICENSE` file, so consult the upstream [StyleGAN-Human](https://github.com/stylegan-human/StyleGAN-Human) repository for its licensing terms.
 
 ---
 
@@ -60,7 +64,7 @@ Whole-body-GAN-generator/
 | **StyleGAN-Human** (StyleGAN2, 1024×1024) | Full-body image generator, produces photorealistic human images |
 | **StyleGAN2-FFHQ** (1024×1024) | Face generator, provides the source face latent code |
 | **ReStyle** (pSp encoder) | Encodes a real user photo into the FFHQ GAN latent space |
-| **InsetGAN** | Joint optimiser that composites the face GAN output into the body GAN seamlessly |
+| **InsetGAN** | Joint optimiser that composites the face GAN output into the body GAN, matching appearance across the join |
 | **PTI** (Pivotal Tuning Inversion) | Fine-tunes the generator on a specific user photo for higher fidelity |
 | **FastAPI + ColabCode + ngrok** | Serves inference from a Colab GPU runtime over a public URL |
 | **Firebase Storage** | Transfers images between the iOS app and the Colab server |
@@ -97,12 +101,27 @@ End-to-end pipeline with a FastAPI server:
 5. Serve results through a FastAPI endpoint via ngrok tunnel
 
 ### `server/Deploying_Style_Human_Inference_in_Google_Colab_environment.ipynb`
-Deployment-focused notebook. Exposes these API endpoints:
+Deployment-focused notebook. Exposes these API endpoints (all `GET`, with query-string parameters such as `seed`, `trunc`, `row_seeds`, `face_seed`):
 - `GET /`: health check
-- `POST /generate`: generate images from seeds
-- `POST /edit`: attribute editing
-- `POST /style_mix`: style mixing
-- `POST /insetgan`: InsetGAN joint optimisation
+- `GET /generate_single_image`, `GET /generate_image`: generate images from seeds
+- `GET /upper_length_Edit`, `GET /bottom_length_Edit`: attribute editing
+- `GET /Style_Mixing_EndPoint`: style mixing
+- `GET /Joint_Optimisation_Endpoint`: InsetGAN joint optimisation
+
+### `server/User_Whole_Body_Generation.ipynb`
+Original joint-optimisation server. Runs its own `FastAPI()` app with CORS enabled:
+- `GET /joint_Optimisation`: run joint optimisation from query params (`body_seed`, `joint_steps`, `trunc`), returns an MP4
+- `POST /joint_Optimisation_upload`: upload a face photo (multipart `file`) plus the same query params, returns an MP4
+
+### `server/Copy_of_Optimised_User_Whole_Body_Generation.ipynb`
+Optimised variant. Runs its own separate `FastAPI()` app with CORS enabled:
+- `GET /join-optimisation-url-endpoint`: run joint optimisation from an `image_url` plus `body_seed`, `joint_steps`, `trunc`, returns an MP4
+- `POST /join-optimisation-upload-endpoint`: same, via multipart file upload
+- `GET /generate_single_image`: generate a single image from `seed`/`trunc`
+
+The same notebook also defines `GET /html` (a Jinja2 status page) and `GET /video` (streams the last generated MP4) earlier on, but registers them on an `app` instance that is discarded when a later cell runs `app = FastAPI()` again to attach CORS middleware; run top to bottom, only the three routes above are actually reachable.
+
+Each of the four server notebooks above instantiates its own independent FastAPI app; they are four separate server implementations with four different endpoint sets, not a single shared API split across two notebooks.
 
 ---
 
@@ -154,9 +173,9 @@ only the Firebase configuration file (`GoogleService-Info.plist`) used by the iO
 
 ## References
 
-- [StyleGAN-Human](https://github.com/stylegan-human/StyleGAN-Human) (Fu et al., 2022)
-- [ReStyle](https://github.com/yuval-alaluf/restyle-encoder) (Alaluf et al., 2021)
-- [InsetGAN](https://github.com/stylegan-human/StyleGAN-Human): joint face-body optimisation
-- [PTI](https://github.com/danielroich/PTI) (Roich et al., 2022)
+- [StyleGAN-Human](https://github.com/stylegan-human/StyleGAN-Human) (Fu et al., ECCV 2022)
+- [ReStyle](https://github.com/yuval-alaluf/restyle-encoder) (Alaluf et al., ICCV 2021)
+- [InsetGAN](https://github.com/afruehstueck/insetGAN) (Frühstück et al., CVPR 2022): joint face-body optimisation; the `insetgan.py` script used here is vendored inside the `StyleGAN-Human` repository
+- [PTI](https://github.com/danielroich/PTI) (Roich et al., ACM TOG 2022)
 - [Fellowship.AI](https://fellowship.ai)
 
