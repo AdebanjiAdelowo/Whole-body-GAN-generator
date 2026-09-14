@@ -168,6 +168,9 @@ pip install torch torchvision lpips fastapi colabcode
 
 No pinned `requirements.txt` is included; the `requirements/` directory contains
 only the Firebase configuration file (`GoogleService-Info.plist`) used by the iOS app.
+That file is not tracked in this repository; copy `requirements/GoogleService-Info.plist.example`
+to `requirements/GoogleService-Info.plist` and fill it in with your own Firebase project's values
+to build the iOS app.
 
 ---
 
