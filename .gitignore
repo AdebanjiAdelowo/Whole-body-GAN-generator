@@ -8,3 +8,6 @@ DerivedData/
 # Firebase config (contains project API key; keep local only)
 requirements/GoogleService-Info.plist
 
+# CocoaPods: reproducible via `pod install` (see Podfile's post_install hook)
+user_interface/Whole-Body GAN Demo/Pods/
+
